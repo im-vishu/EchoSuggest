@@ -47,6 +47,8 @@
 ## 📁 Project Structure
 
 ```
+
+
 EchoSuggest/
 ├── data/               # Datasets (Amazon Electronics / MovieLens)
 ├── models/             # Trained .pkl or .h5 model files
