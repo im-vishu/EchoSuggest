@@ -1,4 +1,4 @@
-export type Product = {
+﻿export type Product = {
   id: string
   title: string
   description: string
@@ -29,6 +29,17 @@ export type CollaborativeRecommendationResponse = {
   items: CollaborativeItem[]
 }
 
+export type ColdStartItem = {
+  product_id: string
+  score: number
+}
+
+export type ColdStartRecommendationResponse = {
+  mode: 'popular' | 'trending'
+  window_days: number
+  items: ColdStartItem[]
+}
+
 export type HybridItem = {
   product_id: string
   hybrid_score: number
@@ -39,6 +50,7 @@ export type HybridItem = {
 
 export type HybridRecommendationResponse = {
   user_id: string
+  strategy: string
   weight_collaborative: number
   weight_content: number
   items: HybridItem[]
@@ -50,3 +62,4 @@ export type PrecisionAtKReport = {
   mean_precision_at_k: number
   detail: string
 }
+
