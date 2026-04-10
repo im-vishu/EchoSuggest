@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+﻿from pydantic import BaseModel, Field
 
 
 class SimilarItem(BaseModel):
@@ -15,7 +15,7 @@ class CollaborativeItem(BaseModel):
     product_id: str
     estimated_rating: float = Field(
         ...,
-        description="Predicted score ~1–5 from truncated SVD reconstruction (clamped)",
+        description="Predicted score around 1-5 from truncated SVD reconstruction (clamped)",
     )
 
 
@@ -24,12 +24,23 @@ class CollaborativeRecommendationResponse(BaseModel):
     items: list[CollaborativeItem]
 
 
+class ColdStartItem(BaseModel):
+    product_id: str
+    score: float
+
+
+class ColdStartRecommendationResponse(BaseModel):
+    mode: str
+    window_days: int
+    items: list[ColdStartItem]
+
+
 class HybridItem(BaseModel):
     product_id: str
     hybrid_score: float
     collaborative_norm: float = Field(
         ...,
-        description="Min–max normalized CF estimate within the candidate pool [0,1]",
+        description="Min-max normalized CF estimate within the candidate pool [0,1]",
     )
     content_similarity: float = Field(
         ...,
@@ -40,6 +51,7 @@ class HybridItem(BaseModel):
 
 class HybridRecommendationResponse(BaseModel):
     user_id: str
+    strategy: str = "hybrid"
     weight_collaborative: float
     weight_content: float
     items: list[HybridItem]
@@ -50,3 +62,5 @@ class PrecisionAtKReport(BaseModel):
     users_evaluated: int
     mean_precision_at_k: float
     detail: str
+
+
