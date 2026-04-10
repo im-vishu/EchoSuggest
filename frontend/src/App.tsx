@@ -1,9 +1,10 @@
-import { motion } from 'framer-motion'
+﻿import { motion } from 'framer-motion'
 import { useCallback, useEffect, useState } from 'react'
 
 import { api } from './lib/api'
 import { useStatusStore } from './stores/statusStore'
 import type {
+  ColdStartRecommendationResponse,
   CollaborativeRecommendationResponse,
   ContentRecommendationResponse,
   HybridRecommendationResponse,
@@ -31,6 +32,8 @@ function App() {
   const [hybridError, setHybridError] = useState<string | null>(null)
   const [pAtK, setPAtK] = useState<PrecisionAtKReport | null>(null)
   const [pAtKLoading, setPAtKLoading] = useState(false)
+  const [coldStartRec, setColdStartRec] =
+    useState<ColdStartRecommendationResponse | null>(null)
 
   const loadProducts = useCallback(async () => {
     setProductsError(null)
@@ -169,7 +172,16 @@ function App() {
     }
   }, [])
 
-  const selectedProduct = products.find((p) => p.id === selectedId)
+
+  useEffect(() => {
+    api
+      .get<ColdStartRecommendationResponse>('/api/v1/recommendations/cold-start', {
+        params: { top_k: 8, mode: 'trending', window_days: 30 },
+      })
+      .then((res) => setColdStartRec(res.data))
+      .catch(() => setColdStartRec(null))
+  }, [products.length])
+    const selectedProduct = products.find((p) => p.id === selectedId)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -184,11 +196,10 @@ function App() {
             EchoSuggest
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-            Phase 4 — Hybrid + evaluation + cache
+            Phase 4 â€” Hybrid + evaluation + cache
           </h1>
           <p className="mt-3 text-zinc-400">
-            Blended CF + content scores, Redis-cached hybrid responses, and
-            collaborative Precision@K (holdout).
+            Hybrid + collaborative + content with trending/popular cold-start fallback and evaluation.
           </p>
         </motion.header>
 
@@ -200,7 +211,7 @@ function App() {
         >
           {loading && (
             <p className="text-zinc-400" role="status">
-              Checking API…
+              Checking APIâ€¦
             </p>
           )}
           {error && (
@@ -272,7 +283,7 @@ function App() {
                           <span className="font-medium">{p.title}</span>
                           <span className="mt-0.5 block text-xs text-zinc-500">
                             {p.category}
-                            {p.tags.length ? ` · ${p.tags.slice(0, 3).join(', ')}` : ''}
+                            {p.tags.length ? ` Â· ${p.tags.slice(0, 3).join(', ')}` : ''}
                           </span>
                         </button>
                       </li>
@@ -290,7 +301,7 @@ function App() {
                     Selected: {selectedProduct.title}
                   </p>
                   {recLoading && (
-                    <p className="mt-2 text-sm text-zinc-400">Scoring…</p>
+                    <p className="mt-2 text-sm text-zinc-400">Scoringâ€¦</p>
                   )}
                   {recError && (
                     <p className="mt-2 text-sm text-red-400">{recError}</p>
@@ -344,7 +355,7 @@ function App() {
                   >
                     demo-bob
                   </button>
-                  ) — run{' '}
+                  ) â€” run{' '}
                   <code className="text-zinc-400">
                     python scripts/seed_demo_interactions.py
                   </code>
@@ -359,7 +370,7 @@ function App() {
                   />
                 </label>
                 {cfLoading && (
-                  <p className="mt-2 text-sm text-zinc-400">Training / scoring…</p>
+                  <p className="mt-2 text-sm text-zinc-400">Training / scoringâ€¦</p>
                 )}
                 {cfError && (
                   <p className="mt-2 text-sm text-red-400">{cfError}</p>
@@ -368,7 +379,7 @@ function App() {
                   <ul className="mt-3 space-y-2">
                     {cfRec.items.length === 0 && (
                       <li className="text-sm text-zinc-500">
-                        Need ≥5 interactions, ≥2 users, ≥2 items. Seed
+                        Need â‰¥5 interactions, â‰¥2 users, â‰¥2 items. Seed
                         interactions to train the SVD model.
                       </li>
                     )}
@@ -401,7 +412,7 @@ function App() {
                   connected.
                 </p>
                 {hybridLoading && (
-                  <p className="mt-2 text-sm text-zinc-400">Blending…</p>
+                  <p className="mt-2 text-sm text-zinc-400">Blendingâ€¦</p>
                 )}
                 {hybridError && (
                   <p className="mt-2 text-sm text-red-400">{hybridError}</p>
@@ -430,8 +441,8 @@ function App() {
                               {p?.title ?? item.product_id}
                             </span>
                             <span className="font-mono text-xs text-amber-300">
-                              h={item.hybrid_score.toFixed(3)} · c=
-                              {item.content_similarity.toFixed(2)} · cf*=
+                              h={item.hybrid_score.toFixed(3)} Â· c=
+                              {item.content_similarity.toFixed(2)} Â· cf*=
                               {item.collaborative_norm.toFixed(2)}
                             </span>
                           </li>
@@ -439,6 +450,34 @@ function App() {
                       })}
                     </ul>
                   </>
+                )}
+              </div>
+
+              <div className="border-t border-zinc-800 pt-4">
+                <h2 className="text-sm font-medium text-zinc-300">
+                  Cold-start fallback (trending)
+                </h2>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Used when hybrid has sparse user signals.
+                  {hybridRec?.strategy ? ` Strategy: ${hybridRec.strategy}` : ''}
+                </p>
+                {coldStartRec && (
+                  <ul className="mt-3 space-y-2">
+                    {coldStartRec.items.map((item) => {
+                      const p = products.find((x) => x.id === item.product_id)
+                      return (
+                        <li
+                          key={item.product_id}
+                          className="flex items-center justify-between rounded-lg border border-zinc-800 bg-black/30 px-3 py-2 text-sm"
+                        >
+                          <span className="text-zinc-200">{p?.title ?? item.product_id}</span>
+                          <span className="font-mono text-xs text-fuchsia-300">
+                            score={item.score.toFixed(2)}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
                 )}
               </div>
 
@@ -456,7 +495,7 @@ function App() {
                   disabled={pAtKLoading}
                   className="mt-2 rounded-lg bg-violet-900/60 px-3 py-1.5 text-xs font-medium text-violet-100 hover:bg-violet-800/60 disabled:opacity-50"
                 >
-                  {pAtKLoading ? 'Running…' : 'Run P@K (k=10, 50 users)'}
+                  {pAtKLoading ? 'Runningâ€¦' : 'Run P@K (k=10, 50 users)'}
                 </button>
                 {pAtK && (
                   <pre className="mt-3 overflow-x-auto rounded-lg bg-black/40 p-3 text-left text-xs text-violet-200">
@@ -478,3 +517,9 @@ function App() {
 }
 
 export default App
+
+
+
+
+
+
