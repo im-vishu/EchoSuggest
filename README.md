@@ -1,6 +1,6 @@
-# EchoSuggest
+﻿# EchoSuggest
 
-AI-powered product recommendation platform (hybrid content + collaborative filtering). **Phase 1**: FastAPI + MongoDB + React. **Phase 2**: **TF-IDF** content similarity (`content.py`). **Phase 3**: **SVD** collaborative filtering (`collaborative.py`, SciPy). **Phase 4**: **Hybrid** blending (`hybrid.py`), **Redis** response caching, and **Precision@K** holdout evaluation (`/api/v1/evaluate/precision-at-k`).
+AI-powered product recommendation platform (hybrid content + collaborative filtering). **Phase 1**: FastAPI + MongoDB + React. **Phase 2**: **TF-IDF** content similarity (`content.py`). **Phase 3**: **SVD** collaborative filtering (`collaborative.py`, SciPy). **Phase 4**: **Hybrid** blending (`hybrid.py`), **Redis** response caching, and **Precision@K** holdout evaluation (`/api/v1/evaluate/precision-at-k`). **Phase 5**: **Cold-start** popular/trending fallbacks (`cold_start.py`) used directly and as hybrid backup.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - Interactions: `POST /api/v1/interactions`, `GET /api/v1/interactions`
 - Content similar: `GET /api/v1/recommendations/content/{product_id}?top_k=10`
 - Collaborative (SVD / matrix factorization): `GET /api/v1/recommendations/collaborative/{user_id}?top_k=10`
-- Hybrid: `GET /api/v1/recommendations/hybrid/{user_id}?top_k=10&w_collaborative=0.6&w_content=0.4` (cached in **Redis** when available)
+- Hybrid: `GET /api/v1/recommendations/hybrid/{user_id}?top_k=10&w_collaborative=0.6&w_content=0.4` (cached in **Redis** when available)`n- Cold-start: `GET /api/v1/recommendations/cold-start?mode=trending&window_days=30&top_k=10`
 - Offline metric: `GET /api/v1/evaluate/precision-at-k?k=10&max_users=100` (last-event holdout per user; can be slow)
 
 **Demo data** (with the API running):
@@ -62,7 +62,7 @@ copy .env.example .env
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). The UI shows health, catalog, **content** neighbors, **collaborative** and **hybrid** lists, and a **Precision@K** check button.
+Open [http://localhost:5173](http://localhost:5173). The UI shows health, catalog, **content** neighbors, **collaborative**, **hybrid**, **cold-start trending** lists, and a **Precision@K** check button.
 
 ## Verification
 
@@ -70,7 +70,7 @@ Open [http://localhost:5173](http://localhost:5173). The UI shows health, catalo
 |--------|----------|
 | `GET /api/v1/health` | `{"status":"ok"}` |
 | `GET /api/v1/db/ping` | `{"mongodb":"ok"}` |
-| After seeding | Content, collaborative, hybrid return ranked items |
+| After seeding | Content, collaborative, hybrid, cold-start return ranked items |
 | Redis up | Repeated hybrid calls hit cache (see server logs) |
 | Frontend | All panels load without CORS errors |
 
@@ -89,4 +89,6 @@ docker-compose.yml MongoDB + Redis
 
 ## Next phase
 
-**Phase 5**: Cold-start fallbacks (trending / popular), richer user profiles, and precomputed recommendation jobs.
+**Phase 6**: User-tracking driven trending windows, scheduled precompute jobs, and latency tuning.
+
+
