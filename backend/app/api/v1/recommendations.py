@@ -1,5 +1,5 @@
-import asyncio
-from typing import Annotated
+﻿import asyncio
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -8,6 +8,8 @@ from app.api.deps import get_database
 from app.cache.redis_client import cache_get, cache_set
 from app.core.config import settings
 from app.schemas.recommendation import (
+    ColdStartItem,
+    ColdStartRecommendationResponse,
     CollaborativeItem,
     CollaborativeRecommendationResponse,
     ContentRecommendationResponse,
@@ -15,6 +17,7 @@ from app.schemas.recommendation import (
     HybridRecommendationResponse,
     SimilarItem,
 )
+from app.services.recommendations.cold_start import cold_start_recommend
 from app.services.recommendations.collaborative import (
     load_or_fit_collaborative,
     recommend_for_user,
@@ -79,6 +82,26 @@ async def collaborative_for_user(
     return CollaborativeRecommendationResponse(user_id=user_id, items=items)
 
 
+@router.get("/cold-start", response_model=ColdStartRecommendationResponse)
+async def cold_start(
+    db: Db,
+    top_k: int = Query(10, ge=1, le=50),
+    mode: Literal["popular", "trending"] = Query("trending"),
+    window_days: int = Query(30, ge=1, le=180),
+) -> ColdStartRecommendationResponse:
+    rows = await cold_start_recommend(
+        db,
+        top_k=top_k,
+        mode=mode,
+        window_days=window_days,
+    )
+    return ColdStartRecommendationResponse(
+        mode=mode,
+        window_days=window_days,
+        items=[ColdStartItem(**x) for x in rows],
+    )
+
+
 @router.get("/hybrid/{user_id}", response_model=HybridRecommendationResponse)
 async def hybrid_for_user(
     user_id: str,
@@ -91,7 +114,7 @@ async def hybrid_for_user(
     interaction_n = await db.interactions.count_documents({})
     product_n = await db.products.count_documents({})
     cache_key = (
-        f"hybrid:v1:{interaction_n}:{product_n}:{user_id}:"
+        f"hybrid:v2:{interaction_n}:{product_n}:{user_id}:"
         f"{top_k}:{w_collaborative:.6f}:{w_content:.6f}:{max_pool}"
     )
     cached = await cache_get(cache_key)
@@ -106,8 +129,26 @@ async def hybrid_for_user(
         w_content,
         max_pool=max_pool,
     )
+
+    strategy = "hybrid"
+    if not rows:
+        cold_rows = await cold_start_recommend(db, top_k=top_k, mode="trending")
+        rows = [
+            {
+                "product_id": x["product_id"],
+                "hybrid_score": x["score"],
+                "collaborative_norm": 0.0,
+                "content_similarity": 0.0,
+                "estimated_rating": 0.0,
+            }
+            for x in cold_rows
+        ]
+        nw_cf, nw_ct = 0.0, 0.0
+        strategy = "cold_start_trending"
+
     resp = HybridRecommendationResponse(
         user_id=user_id,
+        strategy=strategy,
         weight_collaborative=nw_cf,
         weight_content=nw_ct,
         items=[HybridItem(**r) for r in rows],
@@ -118,3 +159,4 @@ async def hybrid_for_user(
         settings.recommend_cache_ttl_seconds,
     )
     return resp
+
