@@ -13,6 +13,10 @@ log = logging.getLogger(__name__)
 _client: redis.Redis | None = None
 
 
+def get_redis() -> redis.Redis | None:
+    return _client
+
+
 async def redis_connect() -> None:
     global _client
     try:
