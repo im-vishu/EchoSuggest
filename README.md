@@ -2,7 +2,9 @@
 
 EchoSuggest — a lightweight, modular recommender (TF‑IDF content + SVD collaborative, optional hybrid + Redis cache) with a TypeScript (Vite + React) frontend and a Python (FastAPI) backend providing evaluation tools and demo data.
 
+
 ---
+
 
 ## ✨ Highlights
 - ⚡ FastAPI endpoints for content, collaborative, hybrid, and cold-start recommendations  
@@ -12,14 +14,18 @@ EchoSuggest — a lightweight, modular recommender (TF‑IDF content + SVD colla
 - 🐳 Docker Compose for local MongoDB + Redis development  
 - 🧩 Frontend prototype (Vite + React + TypeScript) for UI integration
 
+
 ---
+
 
 ## 📌 Quick links
 - API docs: http://localhost:8000/docs  
 - Frontend (dev): http://localhost:5173  
 - Dev services: MongoDB → localhost:27017, Redis → localhost:6380
 
+
 ---
+
 
 ## 🛠 Tech stack
 - Backend: Python 3.12+, FastAPI, Uvicorn, Motor (MongoDB)  
@@ -29,7 +35,9 @@ EchoSuggest — a lightweight, modular recommender (TF‑IDF content + SVD colla
 - Dev: ESLint, Tailwind, TypeScript  
 - Infra: Docker, docker-compose
 
+
 ---
+
 
 ## 🗂 Project structure
 ```
@@ -58,7 +66,9 @@ EchoSuggest — a lightweight, modular recommender (TF‑IDF content + SVD colla
 └── README.md
 ```
 
+
 ---
+
 
 ## 🚀 Local development — quickstart
 
@@ -104,6 +114,7 @@ python scripts/seed_demo_interactions.py
 
 ---
 
+
 ## 🔍 API overview (prefix: /api/v1)
 
 Health
@@ -131,7 +142,9 @@ Example
 GET /api/v1/recommendations/content/<PRODUCT_ID>?top_k=5  
 → JSON array: [{ "product_id": "...", "score": 0.xx }, ...]
 
+
 ---
+
 
 ## 🔧 Environment configuration
 
@@ -157,7 +170,9 @@ docker run -p 8000:8000 --env-file backend/.env echosuggest-backend:latest
 ```
 - docker-compose.yml ships MongoDB + Redis for local dev. To fully containerize, extend it to run backend and frontend services as well.
 
+
 ---
+
 
 ## 🐞 Troubleshooting
 
@@ -165,13 +180,17 @@ docker run -p 8000:8000 --env-file backend/.env echosuggest-backend:latest
 - Empty collaborative results: seed interactions (backend/scripts) or post events  
 - Port in use: backend=8000, frontend=5173 — stop the process or change ports
 
+
 ---
+
 
 ## 🧪 Tests & CI
 - Add pytest for backend unit & integration tests
 - Add GitHub Actions: lint, pytest, build (frontend + backend)
 
+
 ---
+
 
 ## 🤝 Contributing
 
@@ -184,12 +203,16 @@ We welcome contributions! 🙌
 
 Please include tests for any new recommendation logic and update docs when adding endpoints.
 
+
 ---
+
 
 ## 📄 License
 MIT
 
+
 ---
+
 
 ## ✉️ Contact
 EchoSuggest © 2026 — Created by im-vishu  
