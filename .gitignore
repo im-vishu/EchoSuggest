@@ -1,27 +1,97 @@
-# Python
+# --- Python ---
+# bytecode, caches, envs, test caches
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 .Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+.ipynb_checkpoints/
+
+# packaging / build
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+wheels/
+share/python-wheels/
+
+# virtualenvs (common names)
 .venv/
 venv/
-*.egg-info/
-.pytest_cache/
+ENV/
+env/
+.venv/*
 
-# Node
+# --- Node / frontend ---
 node_modules/
+# common build outputs (Vite / Next / Nuxt / Parcel / Storybook / Turborepo)
 dist/
-*.local
+dist-ssr/
+.next/
+.nuxt/
+.parcel-cache/
+storybook-static/
+.turbo/
+.cache/
+.npm
+.eslintcache
+.nyc_output/
+coverage/
 
-# Env
+# Vite timestamped build artifacts (your existing ones)
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# --- Env & secrets ---
 .env
-.env.*.local
+.env.*
+!.env.example
+# project-specific envs if you don't want to track them
+backend/.env
+frontend/.env
 
-# IDE / OS
+# --- IDE / OS ---
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
 
-# Logs
+# Cursor (often huge; keep only team settings)
+.cursor/*
+!.cursor/settings.json
+
+# Cursor MCP / project tooling copies (if present at repo root)
+mcps/
+
+# --- Logs & temp ---
 *.log
+logs/
+tmp/
+temp/
+
+# --- Misc ---
+*.sqlite
+*.sqlite3
+.build_history.log
+
+# Optional: large binaries (use Git LFS if you need to track these)
+# *.zip
+# *.tar.gz
+# *.exe
