@@ -1,4 +1,4 @@
-﻿"""Cold-start recommendations (popular + trending) from interaction logs."""
+"""Cold-start recommendations (popular + trending) from interaction logs."""
 
 from __future__ import annotations
 
@@ -24,9 +24,17 @@ async def cold_start_recommend(
     top_k: int = 10,
     mode: Literal["popular", "trending"] = "trending",
     window_days: int = 30,
+    category: str | None = None,
 ) -> list[dict[str, float | str]]:
     now = datetime.now(timezone.utc)
     products = await db.products.find({}).to_list(length=50_000)
+    if category and category.strip():
+        c = category.strip().lower()
+        products = [
+            p
+            for p in products
+            if str(p.get("category") or "").lower() == c
+        ]
     if not products:
         return []
 
