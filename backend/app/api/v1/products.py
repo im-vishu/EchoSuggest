@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timezone
 from typing import Annotated
 from uuid import uuid4
@@ -61,8 +62,55 @@ async def list_products(
     db: Db,
     skip: int = Query(0, ge=0, le=100_000),
     limit: int = Query(50, ge=1, le=200),
+    q: str | None = Query(
+        None,
+        max_length=200,
+        description="Case-insensitive search in title and description",
+    ),
+    category: str | None = Query(None, max_length=200),
+    min_price: float | None = Query(None, ge=0),
+    max_price: float | None = Query(None, ge=0),
+    tag: str | None = Query(None, max_length=120, description="Match if tag appears in tags[]"),
 ) -> list[ProductOut]:
-    cursor = db.products.find({}).sort("created_at", -1).skip(skip).limit(limit)
+    if (
+        min_price is not None
+        and max_price is not None
+        and min_price > max_price
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="min_price cannot be greater than max_price",
+        )
+    conds: list[dict] = []
+    if q and q.strip():
+        esc = re.escape(q.strip())
+        conds.append(
+            {
+                "$or": [
+                    {"title": {"$regex": esc, "$options": "i"}},
+                    {"description": {"$regex": esc, "$options": "i"}},
+                ]
+            }
+        )
+    if category and category.strip():
+        esc = re.escape(category.strip())
+        conds.append({"category": {"$regex": f"^{esc}$", "$options": "i"}})
+    if tag and tag.strip():
+        conds.append({"tags": tag.strip()})
+    if min_price is not None or max_price is not None:
+        prange: dict = {}
+        if min_price is not None:
+            prange["$gte"] = min_price
+        if max_price is not None:
+            prange["$lte"] = max_price
+        conds.append({"price": prange})
+    if not conds:
+        match: dict = {}
+    elif len(conds) == 1:
+        match = conds[0]
+    else:
+        match = {"$and": conds}
+    cursor = db.products.find(match).sort("created_at", -1).skip(skip).limit(limit)
     items = await cursor.to_list(length=limit)
     return [_doc_to_out(d) for d in items]
 
