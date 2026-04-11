@@ -1,4 +1,4 @@
-﻿from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class SimilarItem(BaseModel):
@@ -55,6 +55,26 @@ class HybridRecommendationResponse(BaseModel):
     weight_collaborative: float
     weight_content: float
     items: list[HybridItem]
+
+
+class HybridBatchRequest(BaseModel):
+    user_ids: list[str] = Field(..., min_length=1, max_length=25)
+    top_k: int = Field(10, ge=1, le=50)
+    w_collaborative: float = Field(0.6, ge=0.0, le=1.0)
+    w_content: float = Field(0.4, ge=0.0, le=1.0)
+    max_pool: int = Field(200, ge=50, le=500)
+
+    @field_validator("user_ids")
+    @classmethod
+    def strip_ids(cls, v: list[str]) -> list[str]:
+        out = [u.strip() for u in v if u and u.strip()]
+        if len(out) != len(v):
+            raise ValueError("user_ids must be non-empty strings")
+        return out
+
+
+class HybridBatchResponse(BaseModel):
+    results: list[HybridRecommendationResponse]
 
 
 class PrecisionAtKReport(BaseModel):
