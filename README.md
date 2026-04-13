@@ -19,7 +19,7 @@ EchoSuggest — a lightweight, modular recommender (TF‑IDF content + SVD colla
 
 
 ## 📌 Quick links
-- API docs: http://localhost:8000/docs  
+- API docs: http://localhost:8000/docs.  
 - Frontend (dev): http://localhost:5173  
 - Dev services: MongoDB → localhost:27017, Redis → localhost:6380
 
