@@ -105,7 +105,7 @@ npm run dev
 ```
 - Vite dev server: http://localhost:5173
 
-5. Seed demo data (optional — recommended for trying recommendations)
+5. Seed demo data (optional — recommended for trying recommendation)
 ```bash
 cd backend
 python scripts/seed_demo_products.py
